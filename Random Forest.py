@@ -1,144 +1,104 @@
-#C:/Users/Xiaofeng Zhang/Desktop/machine learning.csv
-
-# 导入所需库
-import pandas as pd
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import mean_absolute_error, r2_score
-import joblib
+from sklearn.metrics import mean_squared_error, r2_score
 
-# 设置Seaborn全局样式
-sns.set_theme(style="whitegrid", font_scale=1.2)
-
-
-# 定义预测模块
-class MicrobialAbundancePredictor:
-    def __init__(self):
-        self.model = RandomForestRegressor(n_estimators=100, random_state=42)
-        self.scaler = StandardScaler()
-
-    def train(self, file_path):
-        """
-        从本地文件夹加载数据并训练随机森林模型
-        :param file_path: 数据文件的路径（CSV 格式）
-        """
-        # 从 CSV 文件加载数据
-        df = pd.read_csv(file_path)
-
-        # 提取特征和目标变量
-        X = df.drop('Microbial_Abundance', axis=1)
-        y = df['Microbial_Abundance']
-
-        # 划分训练集和测试集
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-        # 标准化特征数据
-        X_train_scaled = self.scaler.fit_transform(X_train)
-        X_test_scaled = self.scaler.transform(X_test)
-
-        # 训练模型
-        self.model.fit(X_train_scaled, y_train)
-
-        # 测试模型性能
-        y_pred = self.model.predict(X_test_scaled)
-        mae = mean_absolute_error(y_test, y_pred)
-        r2 = r2_score(y_test, y_pred)
-
-        print(f"模型训练完成！\nMean Absolute Error (MAE): {mae:.3f}\nR2 Score: {r2:.3f}")
-
-        # 可视化部分
-        self._visualize_data(df, y_test, y_pred)
-
-    def _visualize_data(self, df, y_test, y_pred):
-        """
-        数据和结果可视化
-        :param df: 数据集
-        :param y_test: 测试集真实值
-        :param y_pred: 测试集预测值
-        """
-        # 绘制特征之间的相关性热图
-        plt.figure(figsize=(10, 8))
-        sns.heatmap(df.corr(), annot=True, fmt=".2f", cmap="coolwarm", cbar=True)
-        plt.title("Feature Correlation Heatmap", fontsize=14)
-        plt.savefig("feature_correlation_heatmap.png", dpi=300)
-        plt.show()
-
-        # 绘制真实值 vs 预测值
-        plt.figure(figsize=(8, 6))
-        plt.scatter(y_test, y_pred, color="blue", alpha=0.7)
-        plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], '--', color='red', linewidth=2)
-        plt.title("Actual vs Predicted Microbial Abundance", fontsize=14)
-        plt.xlabel("Actual Values")
-        plt.ylabel("Predicted Values")
-        plt.grid(True)
-        plt.savefig("actual_vs_predicted.png", dpi=300)
-        plt.show()
-
-    def save_model(self, model_path, scaler_path):
-        """
-        保存模型和标准化器
-        :param model_path: 模型保存路径
-        :param scaler_path: 标准化器保存路径
-        """
-        joblib.dump(self.model, model_path)
-        joblib.dump(self.scaler, scaler_path)
-        print("模型和标准化器已保存！")
-
-    def load_model(self, model_path, scaler_path):
-        """
-        加载模型和标准化器
-        :param model_path: 模型保存路径
-        :param scaler_path: 标准化器保存路径
-        """
-        self.model = joblib.load(model_path)
-        self.scaler = joblib.load(scaler_path)
-        print("模型和标准化器已加载！")
-
-    def predict(self, input_data):
-        """
-        根据输入数据预测微生物丰度
-        :param input_data: 包含环境因子的新数据字典
-        :return: 预测的微生物丰度
-        """
-        input_df = pd.DataFrame([input_data])
-        input_scaled = self.scaler.transform(input_df)
-        prediction = self.model.predict(input_scaled)
-        return prediction[0]
-
-
-# 示例：从本地文件夹加载数据并训练模型
-file_path = 'C:/Users/Xiaofeng Zhang/Desktop/machine learning.csv'  # 本地 CSV 文件路径
-
-# 假设文件内容如下：
-# Grain_Size_mm,pH,Organic_Carbon_percent,Salinity_ppt,Water_Content_percent,Microbial_Abundance
-# 0.445636,7.022307,3.204789,24.017657,39.346105,3.143673
-# 0.474517,7.409161,3.249379,24.097253,37.314276,3.758208
-# ...
-
-predictor = MicrobialAbundancePredictor()
-
-# 训练模型并可视化
-predictor.train(file_path)
-
-# 保存模型和标准化器
-predictor.save_model('random_forest_model.pkl', 'scaler.pkl')
-
-# 加载模型和标准化器
-predictor.load_model('random_forest_model.pkl', 'scaler.pkl')
-
-# 预测示例
-input_data = {
-    'Grain_Size_mm': 0.5,
-    'pH': 7.1,
-    'Organic_Carbon_percent': 3.2,
-    'Salinity_ppt': 25,
-    'Water_Content_percent': 39.5
+# 1. 原始数据准备（模拟数据）
+data = {
+    'pH': [6.8, 6.5, 6.9, 7.0, 6.7, 6.9, 6.3, 6.6, 6.8, 7.1,
+           6.6, 6.9, 6.7, 6.4, 6.3, 6.8, 6.2, 7.1, 6.6, 6.7,
+           6.8, 6.5, 6.4, 6.9, 6.8, 7.0, 6.5, 6.7, 6.8, 6.5],
+    'Salinity': [0.5, 0.4, 0.6, 0.5, 0.3, 0.6, 0.4, 0.3, 0.4, 0.6,
+                 0.4, 0.5, 0.4, 0.5, 0.5, 0.5, 0.4, 0.9, 0.8, 0.7,
+                 0.6, 0.5, 0.5, 0.6, 0.6, 0.8, 0.6, 0.7, 0.6, 0.6],
+    'Moisture Content': [36.2, 34.7, 38.9, 40.3, 35.4, 31.5, 34.1, 35.8, 32.7, 41.1,
+                         30.2, 39.1, 36.5, 37.2, 36.8, 30.8, 38.3, 39.2, 33.2, 36.8,
+                         23.7, 28.9, 27.8, 25.6, 28.1, 27.3, 29.6, 24.1, 23.7, 30.8],
+    'Organic Carbon Level': [24.5, 22.8, 25.2, 27.6, 23.9, 23.1, 22.0, 23.8, 26.2, 26.2,
+                             23.5, 25.7, 24.2, 22.1, 23.3, 23.8, 22.5, 24.5, 21.7, 22.1,
+                             20.8, 19.2, 21.7, 21.7, 23.0, 21.3, 22.3, 20.3, 23.0, 22.1],
+    'Total Carbon Level': [29.7, 27.1, 31.0, 33.8, 28.4, 27.6, 27.3, 28.4, 33.5, 34.7,
+                           30.3, 32.6, 30.1, 28.7, 28.1, 30.2, 28.4, 29.0, 28.8, 30.1,
+                           26.3, 23.6, 26.6, 28.5, 27.5, 27.1, 28.1, 27.4, 29.2, 28.5],
+    'Microbial Abundance': [0.57, 0.51, 0.59, 0.62, 0.54, 0.60, 0.53, 0.50, 0.63, 0.62,
+                            0.55, 0.49, 0.51, 0.50, 0.45, 0.52, 0.45, 0.56, 0.50, 0.55,
+                            0.47, 0.38, 0.48, 0.50, 0.54, 0.53, 0.46, 0.47, 0.46, 0.49]
 }
 
-predicted_abundance = predictor.predict(input_data)
-print(f"预测的微生物丰度: {predicted_abundance:.3f}")
+df = pd.DataFrame(data)
 
+# 2. 提取特征和目标变量
+X = df.drop('Microbial Abundance', axis=1)
+y = df['Microbial Abundance']
+
+# 3. 数据标准化
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# 4. 划分训练集和测试集
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+
+# 5. 训练随机森林模型
+rf_model = RandomForestRegressor(n_estimators=100, random_state=42)
+rf_model.fit(X_train, y_train)
+
+# 6. 进行预测
+y_train_pred = rf_model.predict(X_train)
+y_test_pred = rf_model.predict(X_test)
+
+# 7. 计算模型评估指标
+train_r2 = r2_score(y_train, y_train_pred)
+test_r2 = r2_score(y_test, y_test_pred)
+train_rmse = np.sqrt(mean_squared_error(y_train, y_train_pred))
+test_rmse = np.sqrt(mean_squared_error(y_test, y_test_pred))
+
+# 输出评估结果
+print("Train R²:", train_r2)
+print("Test R²:", test_r2)
+print("Train RMSE:", train_rmse)
+print("Test RMSE:", test_rmse)
+
+# 8. 可视化优化
+
+# 设置整体的风格和背景
+sns.set(style="whitegrid")  # 选择一个更简洁的背景
+plt.rcParams.update({'axes.facecolor': '#f4f4f4', 'figure.facecolor': '#f4f4f4'})  # 设置图表背景色
+plt.rcParams['grid.color'] = 'white'  # 设置网格线颜色为白色
+
+# 可视化训练集与测试集的实际值与预测值对比
+plt.figure(figsize=(8, 6))
+plt.scatter(y_train, y_train_pred, color='#1f77b4', edgecolor='black', alpha=0.7, label='Train')  # 蓝色
+plt.scatter(y_test, y_test_pred, color='#ff7f0e', edgecolor='black', alpha=0.7, label='Test')  # 橙色
+plt.plot([0, 1], [0, 1], '--', color='gray')  # 对角线
+plt.title(f'Actual vs Predicted Microbial Abundance\nTrain R²={train_r2:.3f}, Test R²={test_r2:.3f}', fontsize=14)
+plt.xlabel('Actual Microbial Abundance', fontsize=12)
+plt.ylabel('Predicted Microbial Abundance', fontsize=12)
+plt.legend()
+plt.grid(True)
+plt.show()
+
+# 可视化训练集与测试集的特征重要性
+feature_importances = rf_model.feature_importances_
+features = X.columns
+
+plt.figure(figsize=(8, 6))
+sns.barplot(x=feature_importances, y=features, color='#2ca02c')  # 绿色
+plt.title('Feature Importance', fontsize=14)
+plt.xlabel('Importance', fontsize=12)
+plt.ylabel('Feature', fontsize=12)
+plt.show()
+
+# 预测结果的分布（训练集与测试集的分布）
+plt.figure(figsize=(8, 6))
+sns.histplot(y_train_pred, kde=True, color='#1f77b4', bins=10, label='Train', alpha=0.7)
+sns.histplot(y_test_pred, kde=True, color='#ff7f0e', bins=10, label='Test', alpha=0.7)
+plt.title(f'Distribution of Predicted Microbial Abundance\nTrain RMSE={train_rmse:.3f}, Test RMSE={test_rmse:.3f}', fontsize=14)
+plt.xlabel('Predicted Microbial Abundance', fontsize=12)
+plt.ylabel('Frequency', fontsize=12)
+plt.legend()
+plt.grid(True)
+plt.show()
