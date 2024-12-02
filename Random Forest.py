@@ -29,31 +29,34 @@ data = {
                             0.47, 0.38, 0.48, 0.50, 0.54, 0.53, 0.46, 0.47, 0.46, 0.49]
 }
 
-df = pd.DataFrame(data)
+df = pd.DataFrame(data)#将上述的数据转为pandas中的Dataframe格式
 
 # 2. 提取特征和目标变量
-X = df.drop('Microbial Abundance', axis=1)
-y = df['Microbial Abundance']
+X = df.drop('Microbial Abundance', axis=1)#提取特征变量，过程为：删除名为'Microbial Abundance'的列，纬度为一维
+y = df['Microbial Abundance']#提取名为'Microbial Abundance'的列为目标变量
 
 # 3. 数据标准化
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
+scaler = StandardScaler()#实例化了一个StandardScaler对象
+X_scaled = scaler.fit_transform(X)#对X标准化，均值为0，标准差为1
 
 # 4. 划分训练集和测试集
 X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+#上面这段代码是将数据集化为训练集和测试集，X_scaled和y特征变量和目标变量数组，test_size指的是测试集占比，random_state是自由种子，确保每次运行拆分时随机度一样
 
 # 5. 训练随机森林模型
-rf_model = RandomForestRegressor(n_estimators=100, random_state=42)
-rf_model.fit(X_train, y_train)
+rf_model = RandomForestRegressor(n_estimators=100, random_state=42)#构建RF模型，n_estimators是随机森林中树的数量，默认100，这段代码意思是创建一个决策树数量为100，自由种子42的随机森林算法模型
+rf_model.fit(X_train, y_train)#基于X_train和y_train两个训练集构建上述模型
 
 # 6. 进行预测
 y_train_pred = rf_model.predict(X_train)
+#使用已经训练好的随机森林回归模型来对训练集的特征数据X_train进行预测，得到训练集的预测结果，并将结果保存在y_train_pred变量中，下同
 y_test_pred = rf_model.predict(X_test)
 
+
 # 7. 计算模型评估指标
-train_r2 = r2_score(y_train, y_train_pred)
+train_r2 = r2_score(y_train, y_train_pred)#这行代码的作用是计算模型在训练集上的 R²（决定系数）评分，并将结果存储在 train_r2 变量中，下同
 test_r2 = r2_score(y_test, y_test_pred)
-train_rmse = np.sqrt(mean_squared_error(y_train, y_train_pred))
+train_rmse = np.sqrt(mean_squared_error(y_train, y_train_pred))#这行代码的作用是计算训练集的均方根误差（RMSE, Root Mean Squared Error），并将结果存储在train_rmse变量中
 test_rmse = np.sqrt(mean_squared_error(y_test, y_test_pred))
 
 # 输出评估结果
@@ -63,7 +66,6 @@ print("Train RMSE:", train_rmse)
 print("Test RMSE:", test_rmse)
 
 # 8. 可视化优化
-
 # 设置整体的风格和背景
 sns.set(style="whitegrid")  # 选择一个更简洁的背景
 plt.rcParams.update({'axes.facecolor': '#f4f4f4', 'figure.facecolor': '#f4f4f4'})  # 设置图表背景色
