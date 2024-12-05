@@ -1,0 +1,84 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import mean_squared_error, r2_score
+
+# 1. 原始数据准备（模拟数据）
+data = pd.read_csv("C:/Users/Xiaofeng Zhang/Desktop/Lake Erie Machine Learning.csv")
+df = pd.DataFrame(data)
+
+# 2. 提取特征和目标变量
+X = df.drop('CI', axis=1)
+y = df['CI']
+
+# 3. 数据标准化
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# 4. 划分训练集和测试集
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=35)
+
+# 5. 训练随机森林模型
+rf_model = RandomForestRegressor(n_estimators=100, random_state=35)
+rf_model.fit(X_train, y_train)
+
+# 6. 进行预测
+y_train_pred = rf_model.predict(X_train)
+y_test_pred = rf_model.predict(X_test)
+
+# 7. 计算模型评估指标
+train_r2 = r2_score(y_train, y_train_pred)
+test_r2 = r2_score(y_test, y_test_pred)
+train_rmse = np.sqrt(mean_squared_error(y_train, y_train_pred))
+test_rmse = np.sqrt(mean_squared_error(y_test, y_test_pred))
+
+# 输出评估结果
+print("Train R²:", train_r2)
+print("Test R²:", test_r2)
+print("Train RMSE:", train_rmse)
+print("Test RMSE:", test_rmse)
+
+# 8. 可视化优化
+
+# 设置整体的风格和背景
+sns.set(style="whitegrid")  # 选择一个更简洁的背景
+plt.rcParams.update({'axes.facecolor': '#f4f4f4', 'figure.facecolor': '#f4f4f4'})  # 设置图表背景色
+plt.rcParams['grid.color'] = 'white'  # 设置网格线颜色为白色
+
+# 可视化训练集与测试集的实际值与预测值对比
+plt.figure(figsize=(8, 6))
+plt.scatter(y_train, y_train_pred, color='#1f77b4', edgecolor='black', alpha=0.7, label='Train')  # 蓝色
+plt.scatter(y_test, y_test_pred, color='#ff7f0e', edgecolor='black', alpha=0.7, label='Test')  # 橙色
+plt.plot([0, 1], [0, 1], '--', color='gray')  # 对角线
+plt.title(f'Actual vs Predicted CI\nTrain R²={train_r2:.3f}, Test R²={test_r2:.3f}', fontsize=14)
+plt.xlabel('Actual CI', fontsize=12)
+plt.ylabel('Predicted CI', fontsize=12)
+plt.legend()
+plt.grid(True)
+plt.show()
+
+# 可视化训练集与测试集的特征重要性
+feature_importances = rf_model.feature_importances_
+features = X.columns
+
+plt.figure(figsize=(8, 6))
+sns.barplot(x=feature_importances, y=features, color='#2ca02c')  # 绿色
+plt.title('Feature Importance', fontsize=14)
+plt.xlabel('Importance', fontsize=12)
+plt.ylabel('Feature', fontsize=12)
+plt.show()
+
+# 预测结果的分布（训练集与测试集的分布）
+plt.figure(figsize=(8, 6))
+sns.histplot(y_train_pred, kde=True, color='#1f77b4', bins=10, label='Train', alpha=0.7)
+sns.histplot(y_test_pred, kde=True, color='#ff7f0e', bins=10, label='Test', alpha=0.7)
+plt.title(f'Distribution of Predicted CI\nTrain RMSE={train_rmse:.3f}, Test RMSE={test_rmse:.3f}', fontsize=14)
+plt.xlabel('Predicted CI', fontsize=12)
+plt.ylabel('Frequency', fontsize=12)
+plt.legend()
+plt.grid(True)
+plt.show()
