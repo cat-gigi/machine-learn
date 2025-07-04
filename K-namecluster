@@ -1,0 +1,90 @@
+# 读取CSV文件位置：D:\某地水团特征数据.csv
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+import seaborn as sns
+from matplotlib import rcParams
+
+#1. 读取CSV文件并判断文件是否正常读取
+data = pd.read_csv("D:\某地水团特征数据.csv")  # 返回 DataFrame
+print(data)
+print("----------原始数据格式无误-----------")
+
+
+#2. 提取温盐特征（列名为 'Temperature' 和 'Salinity'）
+X = data[['Temperature', 'Salinity']].values
+print("----------温盐数据提取正常-----------")
+
+#3. 数据标准化（统一量纲）
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+print(X_scaled)
+print("----------标准化一切顺利-----------")
+
+#4. 使用K-means聚类（n_clusters代表水团数，按自己需求选取；random_state是随机种子，可自己选）
+kmeans = KMeans(n_clusters=4, random_state=27)
+kmeans.fit(X_scaled)
+labels = kmeans.labels_  # 获取聚类标签
+
+#5. 将聚类结果添加到原始数据
+data['cluster'] = labels
+
+#6. 绘图
+#6.1 搭建框架、字体，在这里设置字体、点大小
+print("Available styles:", plt.style.available)  # 查看可用样式
+plt.style.use('seaborn-bright')   #设置绘图风格，一个一个试，用自己喜欢的风格调
+rcParams['font.family'] = 'Arial' #全局字体设置
+rcParams['font.size'] = 18         #默认字号
+rcParams['axes.labelsize'] = 15   #坐标轴标签字号
+rcParams['axes.titlesize'] = 15   #标题字号
+
+#6.2 绘制聚类结果
+plt.figure(figsize=(8, 6), dpi=600)#设置图表尺寸为 8英寸（宽）× 6英寸（高）,DPI为600
+scatter = plt.scatter(
+    data['Temperature'], # x轴数据：温度
+    data['Salinity'],     # y轴数据：盐度
+    c=labels,             # 颜色按聚类标签区分
+    cmap='viridis',      # 颜色映射
+    alpha=1,              # 完全不透明
+    edgecolor='k',       # 点的边框颜色为黑色
+    linewidths=0.5,      # 边框线宽
+    s=50                 # 点的大小
+)
+
+#6.3. 添加标签和标题
+plt.xlabel('Temperature (°C)', fontweight='bold') # x轴标签：温度（加粗）
+plt.ylabel('Salinity (PSU)', fontweight='bold')    # y轴标签：盐度（加粗）
+plt.title('Marine aquaculture quality Clustering by K-means', fontweight='bold', pad=20)
+#fontweight='bold'：标题加粗。pad=20：标题与图表顶部的间距（20磅），避免拥挤。
+plt.xticks(np.arange(5, 30, 5))  # X轴显示
+plt.yticks(np.arange(0, 30, 5))  # Y轴显示33,33.5,34,...,37
+plt.tick_params(axis='both', direction='in')  # 'both'表示X和Y轴
+
+#6.4 颜色条和图例
+cbar = plt.colorbar(scatter)
+cbar.set_label('Cluster ID', rotation=270, labelpad=20)
+#rotation=270：将颜色条标签旋转270度（垂直显示）。labelpad=15：标签与颜色条的间距（20磅）
+
+#6.5 网格和边框
+plt.grid(True, linestyle='--', alpha=0.5)  # 显示虚线网格
+#sns.despine()                                # 移除上方和右侧的边框线
+
+#6.7 保存图片
+plt.savefig('water quality.pdf', dpi=600, bbox_inches='tight')#自动裁剪图表周围空白区域，确保图像紧凑
+
+plt.show()
+
+#7. 附录：使用 肘部法则（Elbow Method） 选择最优聚类值，验证前面水团数是否合适
+inertia = []
+for k in range(1, 10):
+    kmeans = KMeans(n_clusters=k, random_state=27, n_init=10)
+    kmeans.fit(X_scaled)
+    inertia.append(kmeans.inertia_)  # 聚类误差平方和
+
+plt.plot(range(1, 10), inertia, marker='o')
+plt.xlabel('Number of clusters (K)')
+plt.ylabel('Inertia')
+plt.title('Elbow Method')
+plt.show()
