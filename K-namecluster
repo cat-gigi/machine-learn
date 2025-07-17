@@ -1,49 +1,53 @@
-# 读取CSV文件位置：D:\某地水团特征数据.csv
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
-import seaborn as sns
 from matplotlib import rcParams
+from matplotlib.patches import Ellipse
+import seaborn as sns
+# 读取CSV文件位置：D:\某地水团特征数据.csv
 
-#1. 读取CSV文件并判断文件是否正常读取
-data = pd.read_csv("D:\某地水团特征数据.csv")  # 返回 DataFrame
+
+# 1. 读取CSV文件并判断文件是否正常读取
+data = pd.read_csv("D://某地水团特征数据.csv")  # 返回 DataFrame
 print(data)
 print("----------原始数据格式无误-----------")
 
 
-#2. 提取温盐特征（列名为 'Temperature' 和 'Salinity'）
+# 2. 提取温盐特征（列名为 'Temperature' 和 'Salinity'）
 X = data[['Temperature', 'Salinity']].values
 print("----------温盐数据提取正常-----------")
 
-#3. 数据标准化（统一量纲）
+# 3. 数据标准化（统一量纲）
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 print(X_scaled)
 print("----------标准化一切顺利-----------")
 
-#4. 使用K-means聚类（n_clusters代表水团数，按自己需求选取；random_state是随机种子，可自己选）
-kmeans = KMeans(n_clusters=4, random_state=27)
+# 4. 使用K-means聚类（n_clusters代表水团数，按自己需求选取；random_state是随机种子，可自己选）
+kmeans = KMeans(n_clusters=4, random_state=27, n_init=10)
 kmeans.fit(X_scaled)
 labels = kmeans.labels_  # 获取聚类标签
+# 聚类数目（这里设置为4类）random_state = 27,  # 随机种子（保证结果可复现）n_init = 10  # K-means 算法运行次数（避免警告）
 
-#5. 将聚类结果添加到原始数据
+# 5. 将聚类结果添加到原始数据
 data['cluster'] = labels
+print("----------聚类顺利-----------")
 
-#6. 绘图
-#6.1 搭建框架、字体，在这里设置字体、点大小
-print("Available styles:", plt.style.available)  # 查看可用样式
-plt.style.use('seaborn-bright')   #设置绘图风格，一个一个试，用自己喜欢的风格调
-rcParams['font.family'] = 'Arial' #全局字体设置
-rcParams['font.size'] = 18         #默认字号
-rcParams['axes.labelsize'] = 15   #坐标轴标签字号
-rcParams['axes.titlesize'] = 15   #标题字号
+# 6. 绘图
+# 6.1 搭建框架、字体，在这里设置字体、点大小
+# print("Available styles:", plt.style.available)  # 查看可用样式
+plt.style.use('seaborn-bright')   # 设置绘图风格，一个一个试，用自己喜欢的风格调
+rcParams['font.family'] = 'Arial'  # 全局字体设置
+rcParams['font.size'] = 18         # 默认字号
+rcParams['axes.labelsize'] = 15   # 坐标轴标签字号
+rcParams['axes.titlesize'] = 15   # 标题字号
 
-#6.2 绘制聚类结果
-plt.figure(figsize=(8, 6), dpi=600)#设置图表尺寸为 8英寸（宽）× 6英寸（高）,DPI为600
+# 6.2 绘制聚类结果
+plt.figure(figsize=(8, 6), dpi=600)  # 设置图表尺寸为 8英寸（宽）× 6英寸（高）,DPI为600
 scatter = plt.scatter(
-    data['Temperature'], # x轴数据：温度
+    data['Temperature'],   # x轴数据：温度
     data['Salinity'],     # y轴数据：盐度
     c=labels,             # 颜色按聚类标签区分
     cmap='viridis',      # 颜色映射
@@ -53,30 +57,30 @@ scatter = plt.scatter(
     s=50                 # 点的大小
 )
 
-#6.3. 添加标签和标题
-plt.xlabel('Temperature (°C)', fontweight='bold') # x轴标签：温度（加粗）
+# 6.3. 添加标签和标题
+plt.xlabel('Temperature (°C)', fontweight='bold')  # x轴标签：温度（加粗）
 plt.ylabel('Salinity (PSU)', fontweight='bold')    # y轴标签：盐度（加粗）
 plt.title('Marine aquaculture quality Clustering by K-means', fontweight='bold', pad=20)
-#fontweight='bold'：标题加粗。pad=20：标题与图表顶部的间距（20磅），避免拥挤。
-plt.xticks(np.arange(5, 30, 5))  # X轴显示
-plt.yticks(np.arange(0, 30, 5))  # Y轴显示33,33.5,34,...,37
+# fontweight='bold'：标题加粗。pad=20：标题与图表顶部的间距（20磅），避免拥挤。
+plt.xticks(np.arange(15, 21, 2))  # X轴显示
+plt.yticks(np.arange(29, 33, 1))  # Y轴显示
 plt.tick_params(axis='both', direction='in')  # 'both'表示X和Y轴
 
-#6.4 颜色条和图例
+# 6.4 颜色条和图例
 cbar = plt.colorbar(scatter)
 cbar.set_label('Cluster ID', rotation=270, labelpad=20)
-#rotation=270：将颜色条标签旋转270度（垂直显示）。labelpad=15：标签与颜色条的间距（20磅）
+# rotation=270：将颜色条标签旋转270度（垂直显示）。labelpad=15：标签与颜色条的间距（20磅）
 
-#6.5 网格和边框
+# 6.5 网格和边框
 plt.grid(True, linestyle='--', alpha=0.5)  # 显示虚线网格
-#sns.despine()                                # 移除上方和右侧的边框线
+# sns.despine()                                # 移除上方和右侧的边框线
 
-#6.7 保存图片
-plt.savefig('water quality.pdf', dpi=600, bbox_inches='tight')#自动裁剪图表周围空白区域，确保图像紧凑
-
+# 6.7 保存图片
+plt.savefig('water quality.pdf', dpi=600, bbox_inches='tight')  # 自动裁剪图表周围空白区域，确保图像紧凑
 plt.show()
+print("----------图片绘制顺利-----------")
 
-#7. 附录：使用 肘部法则（Elbow Method） 选择最优聚类值，验证前面水团数是否合适
+# 7. 附录：使用 肘部法则（Elbow Method） 选择最优聚类值，验证前面水团数是否合适
 inertia = []
 for k in range(1, 10):
     kmeans = KMeans(n_clusters=k, random_state=27, n_init=10)
@@ -88,3 +92,110 @@ plt.xlabel('Number of clusters (K)')
 plt.ylabel('Inertia')
 plt.title('Elbow Method')
 plt.show()
+print("----------水团验证顺利-----------")
+
+# 8. 加入置信区间
+def draw_ellipse(position, width, height, angle, ax=None, **kwargs):  # 定义一个椭圆函数
+    ax = ax or plt.gca()
+    ellipse = Ellipse(position, width, height, angle, **kwargs)
+    ax.add_patch(ellipse)
+
+# 设置样式和字体
+plt.style.use('seaborn-bright')
+rcParams['font.family'] = 'Arial'  # 全局字体设置
+rcParams['font.size'] = 18          # 默认字号
+rcParams['axes.labelsize'] = 15    # 坐标轴标签字号
+rcParams['axes.titlesize'] = 15    # 标题字号
+
+# 初始化绘图
+plt.figure(figsize=(8, 6), dpi=600)  #创建画布
+ax = plt.gca()
+
+colors = ['blue', 'green', 'orange', 'purple']  #设置椭圆颜色
+markers = ['o', 's', '^', 'D']       # 设置点标签形状
+
+for i in range(4):  # 改动了聚类数，即水团数的话这里需要修改
+    cluster_data = data[data['cluster'] == i]
+    x = cluster_data['Temperature']
+    y = cluster_data['Salinity']
+
+    # 绘制散点
+    plt.scatter(
+        x, y,
+        c=colors[i],
+        marker=markers[i],
+        edgecolor='k',
+        linewidths=0.5,
+        s=50,
+        label=f'Cluster {i}'
+    )
+
+    # 跳过样本数过少的聚类，防止协方差矩阵出错
+    if len(x) < 2:
+        print(f"Cluster {i} 样本数过少（{len(x)}个），跳过椭圆绘制。")
+        continue
+
+    # 椭圆拟合
+    cov = np.cov(x, y)
+    if np.any(np.isnan(cov)) or np.any(np.isinf(cov)):
+        print(f"Cluster {i} 协方差计算失败，存在NaN或Inf，跳过。")
+        continue
+
+    lambda_, v = np.linalg.eig(cov)
+    lambda_ = np.sqrt(lambda_)
+    center = [np.mean(x), np.mean(y)]
+    width, height = lambda_[0] * 4, lambda_[1] * 4
+    angle = np.degrees(np.arctan2(v[1, 0], v[0, 0]))
+
+    draw_ellipse(center, width, height, angle, ax=ax,
+                 edgecolor=colors[i],
+                 facecolor=colors[i],
+                 alpha=0.1,     # 半透明度（0~1）
+                 linewidth=1.5,
+                 linestyle='-')
+
+# 添加等密度线（isopycnals）
+# 密度计算公式：σ_t = ρ - 1000（σ_t为去掉1的密度）
+def calculate_sigma_t(temp, sal):
+    # 使用 UNESCO 1980 海水状态方程（简化版）
+    return (
+        999.842594 + 6.793952e-2 * temp - 9.095290e-3 * temp**2 +
+        1.001685e-4 * temp**3 - 1.120083e-6 * temp**4 + 6.536332e-9 * temp**5 +
+        (0.824493 - 4.0899e-3 * temp + 7.6438e-5 * temp**2 -
+         8.2467e-7 * temp**3 + 5.3875e-9 * temp**4) * sal +
+        (-5.72466e-3 + 1.0227e-4 * temp - 1.6546e-6 * temp**2) * sal**1.5 +
+        4.8314e-4 * sal**2
+    ) - 1000  # 转为 σ_t 单位
+
+# 创建温度和盐度网格
+T_range = np.linspace(data['Temperature'].min() - 1, data['Temperature'].max() + 1, 100)
+S_range = np.linspace(data['Salinity'].min() - 0.5, data['Salinity'].max() + 1.5, 100)
+T_grid, S_grid = np.meshgrid(T_range, S_range)
+
+# 计算密度
+sigma_t = calculate_sigma_t(T_grid, S_grid)
+
+# 添加等密度线
+cs = plt.contour(T_grid, S_grid, sigma_t, colors='gray', linestyles='dotted', linewidths=1)
+plt.clabel(cs, fmt='%.1f', fontsize=10)
+
+# 添加标签、标题
+plt.xlabel('Temperature (°C)', fontweight='bold')
+plt.ylabel('Salinity (PSU)', fontweight='bold')
+plt.title('Marine aquaculture quality Clustering by K-means', fontweight='bold', pad=20)
+plt.xticks(np.arange(15, 21, 1))
+plt.yticks(np.arange(29, 35, 1))
+plt.tick_params(axis='both', direction='in')
+
+# 图例
+plt.legend(title='Cluster', fontsize=12)
+
+# 网格
+plt.grid(True, linestyle='--', alpha=0.5)
+
+# 保存图片
+plt.savefig('water_quality_with_ellipses.pdf', dpi=600, bbox_inches='tight')
+plt.show()
+print("----------图片绘制顺利，已加椭圆轮廓-----------")
+
+
