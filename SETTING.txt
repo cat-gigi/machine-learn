@@ -1,0 +1,6 @@
+inputfile=D:/A1/S2C_MSIL1C_20250320T031541_N0511_R118_T48QZK_20250320T065326.SAFE
+output=D:/acolite_output/
+
+ancillary_data=False
+luts_download=False
+aerosol_correction=dark_spectrum
